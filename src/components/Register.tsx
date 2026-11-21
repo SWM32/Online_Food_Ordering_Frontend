@@ -123,7 +123,7 @@ export default function Register() {
             Create an Account
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Join the Online Food Ordering System
+            Join FoodRush today
           </p>
         </div>
 

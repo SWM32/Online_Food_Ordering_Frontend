@@ -5,14 +5,55 @@ import { useCart } from "../context/CartContext";
 import { categoryService } from "../services/categoryService";
 import { foodService } from "../services/foodService";
 import { parseApiError } from "../services/api";
+import LoadingScreen from "../components/LoadingScreen";
 import type { CategoryResponse, FoodItemResponse } from "../types";
+
+const homeBgModules = import.meta.glob<string>(
+  "../assets/home-bg-img/*.{webp,jpg,jpeg,png,avif}",
+  { eager: true, import: "default" }
+);
+const HOME_BG_IMAGES: string[] = Object.values(homeBgModules);
+const LAST_BG_STORAGE_KEY = "foodrush_last_home_bg";
+
+function pickRandomHomeBg(): string {
+  if (HOME_BG_IMAGES.length === 0) return "";
+  if (HOME_BG_IMAGES.length === 1) return HOME_BG_IMAGES[0];
+
+  const lastPicked = sessionStorage.getItem(LAST_BG_STORAGE_KEY);
+  const candidates = HOME_BG_IMAGES.filter((img) => img !== lastPicked);
+  const pool = candidates.length > 0 ? candidates : HOME_BG_IMAGES;
+  const chosen = pool[Math.floor(Math.random() * pool.length)];
+  sessionStorage.setItem(LAST_BG_STORAGE_KEY, chosen);
+  return chosen;
+}
 
 type SortOption = "default" | "price-asc" | "price-desc" | "name-asc";
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+
+  // Random hero background image from src/assets/home-bg-img (re-picked on login/mount)
+  const [heroBgState, setHeroBgState] = useState<{
+    userId: number | null;
+    imageUrl: string;
+    isImageLoaded: boolean;
+  }>(() => ({
+    userId: user?.id ?? null,
+    imageUrl: pickRandomHomeBg(),
+    isImageLoaded: HOME_BG_IMAGES.length === 0,
+  }));
+
+  const currentUserId = user?.id ?? null;
+  if (heroBgState.userId !== currentUserId) {
+    const nextUrl = pickRandomHomeBg();
+    setHeroBgState({
+      userId: currentUserId,
+      imageUrl: nextUrl,
+      isImageLoaded: !nextUrl || nextUrl === heroBgState.imageUrl,
+    });
+  }
 
   // Data state
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
@@ -30,6 +71,7 @@ export default function Home() {
   // Loading & Error states
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingFoods, setIsLoadingFoods] = useState(true);
+  const [hasCompletedInitialLoad, setHasCompletedInitialLoad] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Per-item quantity selection, broken image tracking & Add-to-Cart state
@@ -95,6 +137,7 @@ export default function Home() {
       setError(parsed.message);
     } finally {
       setIsLoadingFoods(false);
+      setHasCompletedInitialLoad(true);
     }
   }, [activeKeyword, selectedCategoryId, onlyAvailable]);
 
@@ -200,8 +243,37 @@ export default function Home() {
     }
   };
 
+  const isPageInitialLoading =
+    isAuthLoading ||
+    !hasCompletedInitialLoad ||
+    isLoadingCategories ||
+    !heroBgState.isImageLoaded;
+
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
+      {/* Full-page loading animation with smooth fade-out until Home page data & hero background are loaded */}
+      <LoadingScreen isLoading={isPageInitialLoading} />
+
+      {/* Hidden preloader to ensure the random hero background image is loaded */}
+      {heroBgState.imageUrl && (
+        <img
+          src={heroBgState.imageUrl}
+          alt=""
+          aria-hidden="true"
+          className="hidden"
+          onLoad={() =>
+            setHeroBgState((prev) =>
+              prev.isImageLoaded ? prev : { ...prev, isImageLoaded: true }
+            )
+          }
+          onError={() =>
+            setHeroBgState((prev) =>
+              prev.isImageLoaded ? prev : { ...prev, isImageLoaded: true }
+            )
+          }
+        />
+      )}
+
       {/* Floating Toast Notification */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 max-w-sm animate-bounce">
@@ -254,16 +326,24 @@ export default function Home() {
       )}
 
       {/* Hero Banner & Keyword Search */}
-      <section className="bg-gradient-to-br from-orange-600 via-orange-500 to-amber-500 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+      <section
+        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat text-white overflow-hidden"
+        style={
+          heroBgState.imageUrl
+            ? { backgroundImage: `url(${heroBgState.imageUrl})` }
+            : undefined
+        }
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/65 to-slate-900/40" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-sm text-white mb-4">
               Fresh &bull; Fast &bull; Delicious
             </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight drop-shadow-xs">
               Order Your Favorite Food Online
             </h1>
-            <p className="mt-3 text-orange-50 text-base sm:text-lg">
+            <p className="mt-3 text-slate-100 text-base sm:text-lg drop-shadow-xs">
               Explore our curated menu by category or search for dishes you
               crave right now.
             </p>
@@ -553,7 +633,7 @@ export default function Home() {
         {/* Food Items Grid */}
         {!isLoadingFoods && !error && displayedFoods.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedFoods.map((food) => {
+            {displayedFoods.map((food, index) => {
               const isAvailable = food.status === "AVAILABLE";
               const qty = getQuantity(food.id);
               const isAdding = addingFoodId === food.id;
@@ -563,10 +643,11 @@ export default function Home() {
               return (
                 <article
                   key={food.id}
-                  className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden"
+                  style={{ animationDelay: `${Math.min(index * 45, 360)}ms` }}
+                  className="group animate-card-enter bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col overflow-hidden"
                 >
                   {/* Visual Card Banner / Food Image */}
-                  <div className="relative h-44 bg-gradient-to-br from-orange-100 via-amber-50 to-orange-50 flex items-center justify-center overflow-hidden">
+                  <div className="relative h-44 bg-gradient-to-br from-orange-100 via-amber-50 to-orange-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center overflow-hidden">
                     {showImage ? (
                       <img
                         src={food.imageUrl!}
@@ -577,7 +658,7 @@ export default function Home() {
                             [food.id]: true,
                           }))
                         }
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       />
                     ) : (
                       <div className="w-16 h-16 rounded-2xl bg-white/80 shadow-xs flex items-center justify-center text-orange-500">

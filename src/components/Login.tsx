@@ -101,7 +101,7 @@ export default function Login() {
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Sign in to your Online Food Ordering account
+            Sign in to your FoodRush account
           </p>
         </div>
 

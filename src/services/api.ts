@@ -2,9 +2,11 @@ import axios, { AxiosError } from "axios";
 import type { ErrorResponse } from "../types";
 
 export const TOKEN_STORAGE_KEY = "jwt_token";
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -42,8 +44,7 @@ export function parseApiError(error: unknown): {
 
     if (axiosErr.code === "ERR_NETWORK") {
       return {
-        message:
-          "Unable to connect to the server (http://localhost:8080). Please make sure the backend is running.",
+        message: `Unable to connect to the server (${API_BASE_URL}). Please make sure the backend is running.`,
       };
     }
 
