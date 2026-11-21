@@ -63,9 +63,9 @@ A responsive React + TypeScript frontend application (**FoodRush**) built for th
 ```text
 cw3-front/
 ├── public/
-│   ├── images/                  # Local food images selected from PC via Admin panel
-│   ├── favicon.svg              # FoodRush brand favicon
-│   └── icons.svg                # Public SVG icon sprite
+│   ├── images/                  
+│   ├── favicon.svg              
+│   └── icons.svg                
 ├── src/
 │   ├── assets/
 │   │   ├── home-bg-img/         # Rotating high-res hero background images (.webp)
