@@ -1,4 +1,4 @@
-# Online Food Ordering System — Frontend (`cw3-front`)
+# Online Food Ordering System — Frontend
 
 A responsive React + TypeScript frontend application built for **Food Ordering Platform**. It integrates with the Spring Boot **Online Food Ordering System** REST API using JWT authentication, role-based access control (`CUSTOMER` and `ADMIN`), shopping cart management, order processing, and payment tracking.
 
