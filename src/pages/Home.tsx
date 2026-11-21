@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import { categoryService } from "../services/categoryService";
 import { foodService } from "../services/foodService";
-import { cartService } from "../services/cartService";
 import { parseApiError } from "../services/api";
 import type { CategoryResponse, FoodItemResponse } from "../types";
 
@@ -11,6 +11,7 @@ type SortOption = "default" | "price-asc" | "price-desc" | "name-asc";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
 
   // Data state
@@ -171,7 +172,7 @@ export default function Home() {
     setAddingFoodId(food.id);
 
     try {
-      await cartService.addItemToCart({
+      await addToCart({
         foodItemId: food.id,
         quantity,
       });

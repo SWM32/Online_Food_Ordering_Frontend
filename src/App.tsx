@@ -7,14 +7,17 @@ import {
   Routes,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { CartProvider, useCart } from "./context/CartContext";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
+import Cart from "./pages/Cart";
 import AdminDashboard from "./pages/AdminDashboard";
 
 function Header() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { itemCount } = useCart();
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-30">
@@ -41,6 +44,26 @@ function Header() {
             >
               Menu
             </NavLink>
+
+            {isAuthenticated && (
+              <NavLink
+                to="/cart"
+                className={({ isActive }) =>
+                  `px-3 py-1.5 rounded-lg text-sm font-medium transition inline-flex items-center gap-1.5 ${
+                    isActive
+                      ? "bg-orange-50 text-orange-700"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  }`
+                }
+              >
+                <span>Cart</span>
+                {itemCount > 0 && (
+                  <span className="px-1.5 py-0.2 min-w-[1.25rem] h-5 rounded-full bg-orange-600 text-white text-xs font-bold inline-flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
+              </NavLink>
+            )}
 
             {isAdmin && (
               <NavLink
@@ -101,23 +124,33 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="min-h-screen bg-slate-50 text-slate-900">
-          <Header />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={["ADMIN"]}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
+        <CartProvider>
+          <div className="min-h-screen bg-slate-50 text-slate-900">
+            <Header />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route
+                path="/cart"
+                element={
+                  <ProtectedRoute>
+                    <Cart />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={["ADMIN"]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );
