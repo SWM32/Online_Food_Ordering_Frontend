@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useContext,
@@ -30,6 +31,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const refreshCart = useCallback(async (): Promise<CartResponse | null> => {
+    await Promise.resolve();
     if (!isAuthenticated) {
       setCart(null);
       return null;
@@ -48,12 +50,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    const timer = setTimeout(() => {
       void refreshCart();
-    } else {
-      setCart(null);
-    }
-  }, [isAuthenticated, refreshCart]);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [refreshCart]);
 
   const addToCart = useCallback(
     async (data: CartItemRequest): Promise<CartResponse> => {

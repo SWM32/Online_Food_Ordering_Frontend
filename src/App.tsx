@@ -13,6 +13,8 @@ import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import Cart from "./pages/Cart";
+import Orders from "./pages/Orders";
+import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 
 function Header() {
@@ -46,23 +48,51 @@ function Header() {
             </NavLink>
 
             {isAuthenticated && (
-              <NavLink
-                to="/cart"
-                className={({ isActive }) =>
-                  `px-3 py-1.5 rounded-lg text-sm font-medium transition inline-flex items-center gap-1.5 ${
-                    isActive
-                      ? "bg-orange-50 text-orange-700"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                  }`
-                }
-              >
-                <span>Cart</span>
-                {itemCount > 0 && (
-                  <span className="px-1.5 py-0.2 min-w-[1.25rem] h-5 rounded-full bg-orange-600 text-white text-xs font-bold inline-flex items-center justify-center">
-                    {itemCount}
-                  </span>
-                )}
-              </NavLink>
+              <>
+                <NavLink
+                  to="/cart"
+                  className={({ isActive }) =>
+                    `px-3 py-1.5 rounded-lg text-sm font-medium transition inline-flex items-center gap-1.5 ${
+                      isActive
+                        ? "bg-orange-50 text-orange-700"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    }`
+                  }
+                >
+                  <span>Cart</span>
+                  {itemCount > 0 && (
+                    <span className="px-1.5 py-0.2 min-w-[1.25rem] h-5 rounded-full bg-orange-600 text-white text-xs font-bold inline-flex items-center justify-center">
+                      {itemCount}
+                    </span>
+                  )}
+                </NavLink>
+
+                <NavLink
+                  to="/orders"
+                  className={({ isActive }) =>
+                    `px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                      isActive
+                        ? "bg-orange-50 text-orange-700"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    }`
+                  }
+                >
+                  My Orders
+                </NavLink>
+
+                <NavLink
+                  to="/profile"
+                  className={({ isActive }) =>
+                    `px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                      isActive
+                        ? "bg-orange-50 text-orange-700"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    }`
+                  }
+                >
+                  Profile
+                </NavLink>
+              </>
             )}
 
             {isAdmin && (
@@ -85,12 +115,15 @@ function Header() {
         <div className="flex items-center gap-3">
           {isAuthenticated && user ? (
             <>
-              <span className="hidden sm:inline-flex items-center gap-2 text-sm text-slate-700">
+              <Link
+                to="/profile"
+                className="hidden sm:inline-flex items-center gap-2 text-sm text-slate-700 hover:text-orange-600 transition"
+              >
                 <span>{user.email}</span>
                 <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
                   {user.role}
                 </span>
-              </span>
+              </Link>
               <button
                 onClick={logout}
                 className="px-3.5 py-1.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer"
@@ -136,6 +169,22 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <Cart />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <ProtectedRoute>
+                    <Orders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 }
               />

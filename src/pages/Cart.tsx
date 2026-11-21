@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { orderService } from "../services/orderService";
 import { parseApiError } from "../services/api";
+import PaymentModal from "../components/PaymentModal";
 import type { OrderResponse } from "../types";
 
 export default function Cart() {
@@ -24,6 +25,7 @@ export default function Cart() {
   const [addressError, setAddressError] = useState<string | null>(null);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<OrderResponse | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Feedback banner
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
@@ -180,15 +182,51 @@ export default function Cart() {
           </div>
 
           <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
+            {placedOrder.paymentStatus === null ? (
+              <button
+                type="button"
+                onClick={() => setIsPaymentModalOpen(true)}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold transition cursor-pointer"
+              >
+                Pay Now
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsPaymentModalOpen(true)}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition cursor-pointer"
+              >
+                View Payment Receipt ({placedOrder.paymentStatus})
+              </button>
+            )}
+            <Link
+              to="/orders"
+              onClick={() => setPlacedOrder(null)}
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold transition"
+            >
+              Track in My Orders
+            </Link>
             <Link
               to="/"
               onClick={() => setPlacedOrder(null)}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold transition"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 text-sm font-medium transition"
             >
               Continue Shopping
             </Link>
           </div>
         </div>
+
+        {isPaymentModalOpen && (
+          <PaymentModal
+            order={placedOrder}
+            onClose={() => setIsPaymentModalOpen(false)}
+            onPaymentSuccess={(payment) =>
+              setPlacedOrder((prev) =>
+                prev ? { ...prev, paymentStatus: payment.status } : prev
+              )
+            }
+          />
+        )}
       </div>
     );
   }

@@ -102,6 +102,7 @@ export default function AdminDashboard() {
 
   // Load initial dashboard datasets
   const loadDashboardData = useCallback(async () => {
+    await Promise.resolve();
     setIsLoading(true);
     try {
       const [catsData, foodsData, ordersData, paymentsData, usersData] =
@@ -126,7 +127,10 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    void loadDashboardData();
+    const timer = setTimeout(() => {
+      void loadDashboardData();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [loadDashboardData]);
 
   // Reload orders when orderStatusFilter changes via GET /api/orders?status=...

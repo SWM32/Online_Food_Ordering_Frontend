@@ -58,6 +58,7 @@ export default function Home() {
 
   // Fetch all categories on mount
   const loadCategories = useCallback(async () => {
+    await Promise.resolve();
     setIsLoadingCategories(true);
     try {
       const data = await categoryService.getAllCategories();
@@ -71,6 +72,7 @@ export default function Home() {
 
   // Fetch foods based on active filters using the backend REST endpoints
   const loadFoods = useCallback(async () => {
+    await Promise.resolve();
     setIsLoadingFoods(true);
     setError(null);
 
@@ -97,11 +99,17 @@ export default function Home() {
   }, [activeKeyword, selectedCategoryId, onlyAvailable]);
 
   useEffect(() => {
-    void loadCategories();
+    const timer = setTimeout(() => {
+      void loadCategories();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [loadCategories]);
 
   useEffect(() => {
-    void loadFoods();
+    const timer = setTimeout(() => {
+      void loadFoods();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [loadFoods]);
 
   // Combine client-side filters when multiple filters are active simultaneously

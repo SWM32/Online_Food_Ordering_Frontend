@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useContext,
@@ -29,7 +30,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.getItem(TOKEN_STORAGE_KEY)
   );
   const [user, setUser] = useState<UserResponse | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() =>
+    Boolean(localStorage.getItem(TOKEN_STORAGE_KEY))
+  );
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -38,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async (): Promise<UserResponse | null> => {
+    await Promise.resolve();
     const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
     if (!savedToken) {
       setUser(null);
@@ -62,7 +66,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Verify existing JWT token on startup
   useEffect(() => {
-    void refreshUser();
+    const timer = setTimeout(() => {
+      void refreshUser();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [refreshUser]);
 
   const login = async (credentials: AuthRequest): Promise<UserResponse> => {
